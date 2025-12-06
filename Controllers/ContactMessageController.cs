@@ -14,12 +14,25 @@ public class ContactMessageController: ControllerBase
     public ContactMessageController(AppDbContext context) => this._context = context;
 
     [HttpGet]
-    public async Task<ActionResult<List<ContactMessage>>> Get()
+    public async Task<ActionResult<List<ContactMessagePagination>>> Get(int page = 1, int pageSize = 5)
     {
+        var totalCount = await this._context.ContactMessage.CountAsync();
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / page);
+
         var contactMessages = await this._context
             .ContactMessage
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .OrderByDescending(c => c.CreatedAt).ToListAsync();
-        return Ok(contactMessages);
+            
+        var data = new ContactMessagePagination
+        {
+            Data = contactMessages,
+            TotalPage = totalPages,
+            HasNext = page < totalPages,
+            HasPrev = page > 1
+        };
+        return Ok(data);
     }
 
     [HttpGet("{id}")]

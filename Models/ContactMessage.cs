@@ -13,7 +13,6 @@ public class ContactMessage
     [Column(TypeName = "varchar(50)")]
     public string FirstName { get; set; } = default!;
 
-
     [Column(TypeName = "varchar(50)")]
     [MaxLength(50)]
     public string? MiddleName { get; set; } = default!;

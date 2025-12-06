@@ -8,17 +8,43 @@ namespace CliniqueBackend.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class EventController: ControllerBase
+public class EventController : ControllerBase
 {
     private readonly AppDbContext _context;
     public EventController(AppDbContext context) => this._context = context;
 
     [HttpGet]
-    public async Task<ActionResult<Event>> Get()
+    public async Task<ActionResult<EventPagination>> Get(int page = 1, int pageSize = 3)
+    {
+        var totalCount = await this._context.Event.CountAsync();
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
+
+        var events = await this._context.Event
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(e => e.Schedules)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
+
+        var data = new EventPagination
+        {
+            Data = events,
+            TotalPage = totalPages,
+            HasNext = page < totalPages,
+            HasPrev = page > 1
+        };
+        return Ok(data);
+    }
+
+    [HttpGet]
+    [Route("/api/[controller]/list")]
+    public async Task<ActionResult<List<Event>>> Get()
     {
         var events = await this._context.Event
+        .OrderByDescending(e => e.CreatedAt)
         .Include(e => e.Schedules)
         .ToListAsync();
+
         return Ok(events);
     }
 
@@ -55,17 +81,18 @@ public class EventController: ControllerBase
         this._context.Event.Add(newEvent);
 
         await this._context.SaveChangesAsync();
-        if(data.Schedules.Count > 0)
+        if (data.Schedules.Count > 0)
         {
             var foundEvent = await this._context.Event
             .FirstOrDefaultAsync(e => e.Title == data.Title
             && e.Description == data.Description);
 
-            if(foundEvent == null){
+            if (foundEvent == null)
+            {
                 return BadRequest();
             }
             List<EventSchedule> schedules = new List<EventSchedule>();
-            foreach(EventScheduleDTO schedule in data.Schedules)
+            foreach (EventScheduleDTO schedule in data.Schedules)
             {
                 var eventSchedule = new EventSchedule
                 {
@@ -75,7 +102,8 @@ public class EventController: ControllerBase
                 };
                 eventSchedule.Event = foundEvent;
                 this._context.EventSchedule.Add(eventSchedule);
-            };
+            }
+            ;
             await this._context.SaveChangesAsync();
         }
         return NoContent();
@@ -125,13 +153,13 @@ public class EventController: ControllerBase
             this._context.EventSchedule.RemoveRange(schedulesToDelete);
         }
         // every event must have at least one schedule
-        if(data.Schedules.Count == 0)
+        if (data.Schedules.Count == 0)
         {
             return BadRequest();
         }
-        if(data.Schedules.Count > 0)
+        if (data.Schedules.Count > 0)
         {
-            foreach(EventScheduleDTO element in data.Schedules)
+            foreach (EventScheduleDTO element in data.Schedules)
             {
                 if (element.ScheduleId == 0)
                 {
@@ -145,7 +173,7 @@ public class EventController: ControllerBase
                     this._context.EventSchedule.Add(schedule);
                     continue;
                 }
-                
+
                 var selectSchedule = foundEvent.Schedules
                 .Where(s => s.Id == element.ScheduleId)
                 .SingleOrDefault();

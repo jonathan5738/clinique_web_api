@@ -132,3 +132,4 @@
 /home/jonathan098/Desktop/clinique_project/CliniqueBackend/obj/Debug/net8.0/CliniqueBackend.pdb
 /home/jonathan098/Desktop/clinique_project/CliniqueBackend/obj/Debug/net8.0/CliniqueBackend.genruntimeconfig.cache
 /home/jonathan098/Desktop/clinique_project/CliniqueBackend/obj/Debug/net8.0/ref/CliniqueBackend.dll
+/home/jonathan098/Desktop/clinique_project/CliniqueBackend/obj/Debug/net8.0/CliniqueBackend.sourcelink.json

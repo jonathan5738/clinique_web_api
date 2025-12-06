@@ -26,4 +26,5 @@ public class Event
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime UpdatedAt { get; set; }
+
 }

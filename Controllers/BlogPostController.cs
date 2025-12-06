@@ -14,15 +14,26 @@ public class BlogPostController: ControllerBase
     public BlogPostController(AppDbContext context) => this._context = context;
 
     [HttpGet]
-    public async Task<ActionResult<List<BlogPost>>> Get()
+    public async Task<ActionResult<List<BlogPostPagination>>> Get(int page = 1, int pageSize = 3)
     {
+        var totalCount = await this._context.BlogPost.CountAsync();
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
         var blogPosts = await this._context
-            .BlogPost.OrderByDescending(b => b.CreatedAt)
+            .BlogPost
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(b => b.Department)
+            .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
-
-        return Ok(blogPosts);
+        var data = new BlogPostPagination
+        {
+            Data = blogPosts,
+            TotalPage = totalPages,
+            HasNext = page < totalPages,
+            HasPrev = page > 1
+        };
+        return Ok(data);
     }
-
     [HttpGet("{id}")]
     public async Task<ActionResult<BlogPost>> Get([FromRoute] int id)
     {
@@ -47,6 +58,8 @@ public class BlogPostController: ControllerBase
         }
         var blogPost = new BlogPost { Content = data.Content, Author = data.Author };
         blogPost.Department = foundDepartment;
+        blogPost.ExcerptTitle = data.ExcerptTitle;
+        blogPost.ExcerptBody = data.ExcerptBody;
 
         this._context.BlogPost.Add(blogPost);
         await this._context.SaveChangesAsync();

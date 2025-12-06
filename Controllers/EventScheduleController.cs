@@ -20,7 +20,7 @@ public class EventScheduleController : ControllerBase
             .EventSchedule.ToListAsync();
         return Ok(schedules);
     }
-    [HttpPost]
+    /*[HttpPost]
     public async Task<ActionResult> Post([FromBody] EventScheduleDTO data)
     {
         var foundEvent = await this._context
@@ -59,5 +59,5 @@ public class EventScheduleController : ControllerBase
         await this._context.SaveChangesAsync();
 
         return NoContent();
-    }
+    }*/
 }

@@ -11,6 +11,18 @@ public class BlogPost
     public int DepartmentId { get; set; }
 
     [Required]
+    public string ExcerptTitle { get; set; } = default!;
+
+    [Required]
+    public string ExcerptBody { get; set; } = default!;
+
+    [Required]
+    public string ExcerptImage {get; set;} = default!;
+    
+    [Required]
+    public string AuthorName {get; set;} = default!;
+
+    [Required]
     [Column(TypeName = "text")]
     public string Content { get; set; } = default!;
 

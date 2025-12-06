@@ -22,6 +22,36 @@ public class DoctorController : ControllerBase
         return Ok(doctors);
     }
 
+    [HttpGet]
+    [Route("/api/[controller]/all")]
+    public async Task<ActionResult<DoctorPagination>> GetAll(int page = 1, int pageSize = 4)
+    {
+        var totalCount = await this._context.Doctor.CountAsync();
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
+        var result = await this._context.Doctor
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
+             .Include(doctor => doctor.Department)
+             .Select(doctor => new DoctorData
+             {
+                 Id = doctor.Id,
+                 FirstName = doctor.FirstName,
+                 LastName = doctor.LastName,
+                 MiddleName = doctor.MiddleName,
+                 DepartmentId = doctor.DepartmentId,
+                 Department = doctor.Department.Name
+             })
+             .ToListAsync();
+        var data = new DoctorPagination
+        {
+            Data = result,
+            TotalPage = totalPages,
+            HasNext = page < totalPages,
+            HasPrev = page > 1
+        };
+        return Ok(data);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<Doctor>> Get([FromRoute] int id)
     {
@@ -74,7 +104,9 @@ public class DoctorController : ControllerBase
                 {
                     Day = schedule.Day,
                     StartHour = schedule.StartHour,
-                    EndHour = schedule.EndHour
+                    EndHour = schedule.EndHour,
+                    DayNumber = schedule.DayNumber,
+                    IsSelected = schedule.IsSelected
                 };
                 s.Doctor = foundDoctor;
                 this._context.Schedule.Add(s);
@@ -118,7 +150,7 @@ public class DoctorController : ControllerBase
             .ToList();
             this._context.Schedule.RemoveRange(scheduleToDelete);
         }
-        if(data.Schedules.Count == 0)
+        if (data.Schedules.Count == 0)
         {
             return BadRequest();
         }
@@ -139,7 +171,7 @@ public class DoctorController : ControllerBase
                     this._context.Schedule.Add(schedule);
                     continue;
                 }
-                
+
                 var selectedSchedule = foundDoctor.Schedules
                   .Where(s => s.Id == scheduleDTO.ScheduleId)
                   .SingleOrDefault();
@@ -150,8 +182,24 @@ public class DoctorController : ControllerBase
                 selectedSchedule.Day = scheduleDTO.Day;
                 selectedSchedule.StartHour = scheduleDTO.StartHour;
                 selectedSchedule.EndHour = scheduleDTO.EndHour;
+                selectedSchedule.IsSelected = scheduleDTO.IsSelected;
             }
         }
+        await this._context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPatch("{id}/Department/update/{departmentId}")]
+    public async Task<ActionResult> Patch([FromRoute] int id, [FromRoute] int departmentId)
+    {
+        var foundDoctor = await this._context.Doctor.FirstOrDefaultAsync(d => d.Id == id);
+        var department = await this._context.Department.FirstOrDefaultAsync(d => d.Id == departmentId);
+
+        if (foundDoctor == null || department == null)
+        {
+            return NotFound();
+        }
+        foundDoctor.Department = department;
         await this._context.SaveChangesAsync();
         return NoContent();
     }
@@ -170,6 +218,18 @@ public class DoctorController : ControllerBase
         await this._context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpDelete]
+    public async Task<ActionResult> Delete()
+    {
+        var doctors = await this._context.Doctor.ToListAsync();
+        foreach (var doctor in doctors)
+        {
+            this._context.Doctor.Remove(doctor);
+        }
+        await this._context.SaveChangesAsync();
+        return Ok();
     }
 }
 
@@ -212,4 +272,17 @@ public class DoctorController : ControllerBase
       }
     ]
   }
+
+public class Blog 
+{
+    private int Id {get;set;}
+    public string Title {get;set;}
+    public string Content {get; set;}
+}
+
+public class AppDbContext: DbContext
+{
+    public DbSet<Blog> Blog {get;set;}
+    public AppDbContext(DbContextOptions<AppDbContext> options): base(options){}
+}
 */

@@ -16,7 +16,10 @@ public class DepartmentController: ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Department>>> Get()
     {
-        var departments = await this._context.Department.ToListAsync();
+        var departments = await this._context.Department
+             .Include(department => department.Doctors)
+             .ThenInclude(doctor => doctor.Schedules)
+             .ToListAsync();
         return Ok(departments);
     }
 
@@ -30,13 +33,24 @@ public class DepartmentController: ControllerBase
 
     [HttpGet]
     [Route("/api/[controller]/all")]
-    public async Task<ActionResult<Department>> GetAll()
+    public async Task<ActionResult<DepartmentPagination>> GetAll(int page = 1, int pageSize = 3)
     {
+        var totalCount = await this._context.Department.CountAsync();
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
         var result = await this._context.Department
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
              .Include(department => department.Doctors)
              .ThenInclude(doctor => doctor.Schedules)
              .ToListAsync();
-        return Ok(result);
+        var data = new DepartmentPagination
+        {
+            Data = result,
+            TotalPage = totalPages,
+            HasNext = page < totalPages,
+            HasPrev = page > 1
+        };
+        return Ok(data);
     }
 
     [HttpPost]
