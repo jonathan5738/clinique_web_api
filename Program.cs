@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using CliniqueBackend.Data;
+using CliniqueBackend.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,7 +30,9 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DbUrl");
 builder.Services.AddDbContext<AppDbContext>(options => options
   .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-  
+
+builder.Services.AddScoped<FileUploader>();
+builder.Services.AddScoped<IBlogPost, BlogPostService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

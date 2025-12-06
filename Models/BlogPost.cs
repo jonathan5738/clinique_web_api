@@ -18,9 +18,6 @@ public class BlogPost
 
     [Required]
     public string ExcerptImage {get; set;} = default!;
-    
-    [Required]
-    public string AuthorName {get; set;} = default!;
 
     [Required]
     [Column(TypeName = "text")]

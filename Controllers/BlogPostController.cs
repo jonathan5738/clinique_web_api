@@ -1,6 +1,7 @@
 using CliniqueBackend.Data;
 using CliniqueBackend.Dtos;
 using CliniqueBackend.Models;
+using CliniqueBackend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,35 +11,24 @@ namespace CliniqueBackend.Controllers;
 [Route("/api/[controller]")]
 public class BlogPostController: ControllerBase
 {
+    private readonly IBlogPost blogPostService;
     private readonly AppDbContext _context;
-    public BlogPostController(AppDbContext context) => this._context = context;
+    public BlogPostController(IBlogPost blogPostService, AppDbContext context)
+    {
+        this.blogPostService = blogPostService;
+        this._context = context;
+    }
 
     [HttpGet]
     public async Task<ActionResult<List<BlogPostPagination>>> Get(int page = 1, int pageSize = 3)
     {
-        var totalCount = await this._context.BlogPost.CountAsync();
-        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
-        var blogPosts = await this._context
-            .BlogPost
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Include(b => b.Department)
-            .OrderByDescending(b => b.CreatedAt)
-            .ToListAsync();
-        var data = new BlogPostPagination
-        {
-            Data = blogPosts,
-            TotalPage = totalPages,
-            HasNext = page < totalPages,
-            HasPrev = page > 1
-        };
+        var data = await this.blogPostService.FindAll(page, pageSize);
         return Ok(data);
     }
     [HttpGet("{id}")]
     public async Task<ActionResult<BlogPost>> Get([FromRoute] int id)
     {
-        var foundBlogPost = await this._context.BlogPost
-           .FirstOrDefaultAsync(b => b.Id == id);
+        var foundBlogPost = await this.blogPostService.FindOne(id);
         if (foundBlogPost == null)
         {
             return NotFound();
@@ -47,7 +37,7 @@ public class BlogPostController: ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Post([FromBody] BlogPostDTO data)
+    public async Task<ActionResult> Post([FromForm] BlogPostDTO data)
     {
 
         var foundDepartment = await this._context
@@ -56,13 +46,7 @@ public class BlogPostController: ControllerBase
         {
             return NotFound();
         }
-        var blogPost = new BlogPost { Content = data.Content, Author = data.Author };
-        blogPost.Department = foundDepartment;
-        blogPost.ExcerptTitle = data.ExcerptTitle;
-        blogPost.ExcerptBody = data.ExcerptBody;
-
-        this._context.BlogPost.Add(blogPost);
-        await this._context.SaveChangesAsync();
+        await this.blogPostService.Create(foundDepartment, data);
         return Ok();
     }
 
@@ -82,11 +66,8 @@ public class BlogPostController: ControllerBase
         {
             return NotFound();
         }
-        foundBlogPost.Content = data.Content;
-        foundBlogPost.Author = data.Author;
-        foundBlogPost.Department = foundDepartment;
-
-        await this._context.SaveChangesAsync();
+        await this.blogPostService
+        .Update(foundDepartment, foundBlogPost, data);
         return Ok();
     }
 
@@ -100,8 +81,7 @@ public class BlogPostController: ControllerBase
         {
             return NotFound();
         }
-        this._context.BlogPost.Remove(foundBlogPost);
-        await this._context.SaveChangesAsync();
+        await this.blogPostService.Delete(foundBlogPost);
         return Ok();
     }
 }
