@@ -26,9 +26,9 @@ jobs:
 
       - name: publish project
         run: dotnet publish ./CliniqueBackend.sln --configuration Release --no-build --output ${{ env.PACKAGE_PATH }}
-        
+
       - name: deployment
-        run: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.APP_NAME }}
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
