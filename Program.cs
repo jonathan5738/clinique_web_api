@@ -32,7 +32,8 @@ builder.Services.AddDbContext<AppDbContext>(options => options
   .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<FileUploader>();
-builder.Services.AddScoped<IBlogPost, BlogPostService>();
+builder.Services.AddScoped<IBlogPostService, BlogPostService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -3,7 +3,7 @@ using CliniqueBackend.Models;
 
 namespace CliniqueBackend.Services;
 
-public interface IBlogPost
+public interface IBlogPostService
 {
     public Task<BlogPostPagination> FindAll(int page, int pageSize);
     public Task<BlogPost?> FindOne(int id);

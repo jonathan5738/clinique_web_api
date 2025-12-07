@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CliniqueBackend.Services;
 
-public class BlogPostService: IBlogPost
+public class BlogPostService: IBlogPostService
 {
     private readonly AppDbContext _context;
     private readonly FileUploader fileUploader;
