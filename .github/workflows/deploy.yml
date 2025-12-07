@@ -1,0 +1,25 @@
+name: Publish web api
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fetch code from repository
+        uses: actions/checkout@v5
+        
+      - name: setupt .net environment
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: restore project
+        run: dotnet restore ./CliniqueBackend.sln
+      - name: build project
+        run: dotnet build ./CliniqueBackend.sln --configuration Release --no-restore
+
+      - name: publish project
+        run: dotnet publish ./CliniqueBackend.sln --configuration Release --no-build
