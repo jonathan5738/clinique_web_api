@@ -11,9 +11,9 @@ namespace CliniqueBackend.Controllers;
 [Route("/api/[controller]")]
 public class BlogPostController: ControllerBase
 {
-    private readonly IBlogPost blogPostService;
+    private readonly IBlogPostService blogPostService;
     private readonly AppDbContext _context;
-    public BlogPostController(IBlogPost blogPostService, AppDbContext context)
+    public BlogPostController(IBlogPostService blogPostService, AppDbContext context)
     {
         this.blogPostService = blogPostService;
         this._context = context;
